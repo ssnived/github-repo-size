@@ -9,30 +9,21 @@ const storage = chrome.storage.sync || chrome.storage.local
 let githubToken
 
 const getRepoObject = () => {
-  // find file button
-  const elem = document.querySelector('a.d-none.js-permalink-shortcut')
-  if (!elem) return false
-
-  if (!elem.href ||
-      !elem.href.match(/^https?:\/\/github.com\//)) {
-    return false
-  }
-
-  const repoUri = elem.href.replace(/^https?:\/\/github.com\//, '')
-  const arr = repoUri.split('/')
+  const repoUri = document.location.pathname
+  const arr = repoUri.replace(/^\//, '').split('/')
 
   const userOrg = arr.shift()
   const repoName = arr.shift()
   const repo = `${userOrg}/${repoName}`
 
-  arr.shift() // tree
+  const ref = document.querySelector('#branch-picker-repos-header-ref-selector').textContent.trim()
 
-  const ref = arr.shift()
+  const currentPath = repoUri.split(ref)[1]?.trim() ?? '';
 
   return {
     repo,
     ref,
-    currentPath: arr.join('/').trim()
+    currentPath
   }
 }
 
@@ -116,7 +107,7 @@ const checkForRepoPage = async () => {
   // wait for the table to load
   await new Promise((resolve, reject) => {
     function loading () {
-      return !!document.querySelector('div[role="gridcell"] div.Skeleton')
+      return !!document.querySelector('.Skeleton')
     }
 
     if (!loading()) return resolve()
@@ -154,12 +145,11 @@ const checkForRepoPage = async () => {
     sizeObj[item.name] = item.type !== 'dir' ? item.size : 'dir'
   })
 
-  const list = [...document.querySelectorAll('div[role="row"].Box-row')]
-  const items = [...document.querySelectorAll('div[role="row"].Box-row div[role="rowheader"] a')]
-  const ageForReference = document.querySelectorAll('div[role="row"].Box-row div[role="gridcell"]:last-child')
+  const rows = [...document.querySelectorAll('tr.react-directory-row')]
 
-  items.forEach((item, index) => {
-    const filename = getFileName(item.text)
+  rows.forEach((row) => {
+    const fileNameEl = row.querySelector('h3')
+    const filename = getFileName(fileNameEl.textContent)
     const t = sizeObj[filename]
 
     const div = document.createElement('div')
@@ -185,13 +175,19 @@ const checkForRepoPage = async () => {
 
     div.innerHTML = `<span class="css-truncate css-truncate-target d-block width-fit github-repo-size-div">${label}</span>`
 
-    list[index].insertBefore(div, ageForReference[index])
+    const td = document.createElement('td')
+    td.appendChild(div)
+
+    reference = row.querySelector('td:last-child')
+    row.insertBefore(td, reference)
   })
+
+  const rowHeader = document.querySelector('table > tbody > tr > td:nth-child(1)')
+  rowHeader.setAttribute('colspan', '4')
 }
 
 const loadDirSizes = async () => {
-  const files = [...document.querySelectorAll('div[role="row"].Box-row div[role="rowheader"] a')]
-  const dirSizes = [...document.querySelectorAll('div.github-repo-size-dir span')]
+  const files = [...document.querySelectorAll('.github-repo-size-dir')]
   const navElem = document.getElementById(NAV_ELEM_ID)
 
   if (navElem) {
@@ -199,9 +195,8 @@ const loadDirSizes = async () => {
     navElem.title = 'Loading directory sizes...'
   }
 
-  dirSizes.forEach(dir => {
-    dir.textContent = '...'
-    dir.parentElement.onclick = null
+  files.forEach((file) => {
+    file.onClick = null
   })
 
   const repoObj = getRepoObject()
@@ -231,10 +226,10 @@ const loadDirSizes = async () => {
   })
 
   files.forEach(file => {
-    const dirname = getFileName(file.text)
+    const dirname = file.getAttribute('data-dirname')
     const t = sizeObj[dirname]
 
-    const dir = dirSizes.find(dir => dir.parentElement.getAttribute('data-dirname') === dirname)
+    const dir = file.querySelector('span')
 
     if (dir) {
       dir.textContent = getHumanReadableSize(t)
