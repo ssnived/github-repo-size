@@ -17,6 +17,7 @@ test.describe("Extension Enabled: Repo Size Extension Validation", () => {
 });
 
 //this test suite can be used to accurately check whether the size value correcly corresponds with the correct file/folder (allows for more specific validations)
+//NOTE: this will not work unless you know the exact files and sizes you wish to test and pass those through
 test.describe("Extension Enabled: File Size Validation", () => {
   test(" File sizes appear correctly and accurately for each file", async ({
     page,
