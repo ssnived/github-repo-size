@@ -34,7 +34,7 @@ export class repoSizeColumnPage {
 
       for (let i = 0; i < numberOfCells; i++) {
         const cellLocator = await this.columnCellLocator.nth(i);
-        await cellLocator.click(); //precondition to make it visible in the DOM
+        await cellLocator.click(); //precondition to make it visible in the DOM (if run in isolation)
         await expect(cellLocator).toBeVisible();
       }
       return true;
@@ -49,6 +49,7 @@ export class repoSizeColumnPage {
     // Check if inner text of each element contains any valid measure
     for (let i = 0; i < numberOfCells; i++) {
       const cellLocator = await this.columnCellLocator.nth(i);
+      await cellLocator.click(); //precondition to make it visible in the DOM (if run in isolation)
       const innerText = await cellLocator.innerText();
       const innerTextMeasure = innerText.split(" ")[1];
       await expect(MEASURE).toContain(innerTextMeasure);

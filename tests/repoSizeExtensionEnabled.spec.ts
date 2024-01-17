@@ -7,7 +7,8 @@ test.describe("Extension Enabled: Repo size column tests", () => {
   }) => {
     const repoSizeColumn = new repoSizeColumnPage(page);
     await page.goto(repoSizeColumn.pageURL);
-    await page.waitForSelector('[data-testid*="github-repo-size-cell"]');
+
+    await page.waitForSelector('[data-testid*="github-repo-size-cell"]'); //allows the extension to be fully loaded
 
     await expect(await repoSizeColumn.validateCellsAreVisible()).toBe(true);
     await repoSizeColumn.validateCellMeasures();
