@@ -15,7 +15,6 @@ export const test = base.extend<{
         `--load-extension=${pathToExtension}`,
       ],
     });
-    console.log("Context created Enabled Extension");
     await use(context);
     await context.close();
   },
@@ -33,7 +32,6 @@ export const test = base.extend<{
   },
   contextWithoutExtension: async ({}, use) => {
     const context = await chromium.launchPersistentContext("");
-    console.log("Context created Disabled Extension");
     await use(context);
     await context.close();
   },
