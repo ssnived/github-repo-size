@@ -35,7 +35,7 @@ export class repoSizeColumnPage {
 
       for (let i = 0; i < numberOfCells; i++) {
         const cellLocator = await this.columnCellLocator.nth(i);
-        // await cellLocator.click();
+        await cellLocator.click();
         await expect(cellLocator).toBeVisible();
       }
       return true;
