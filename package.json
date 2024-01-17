@@ -3,7 +3,9 @@
   "private": true,
   "scripts": {
     "zip": "bestzip extension.zip src/ icons/ manifest.json LICENSE.md",
-    "test": "standard"
+    "test": "standard",
+    "playwright:test": "playwright test",
+    "playwright:test:debug": "playwright test --debug"
   },
   "repository": {
     "type": "git",
@@ -16,7 +18,12 @@
   },
   "homepage": "https://github.com/stevennoto/github-repo-size#readme",
   "devDependencies": {
+    "@playwright/test": "^1.41.0",
+    "@types/node": "^20.11.4",
     "bestzip": "^2.1.4",
     "standard": "^12.0.1"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1"
   }
 }

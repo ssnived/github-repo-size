@@ -10,22 +10,14 @@
     "48": "icons/ghrs48.png",
     "128": "icons/ghrs128.png"
   },
-  "permissions": [
-    "storage"
-  ],
-  "background" : {
-    "scripts" : [
-      "src/background.js"
-    ]
+  "permissions": ["storage"],
+  "background": {
+    "scripts": ["src/background.js"]
   },
   "content_scripts": [
     {
-      "matches": [
-        "https://github.com/*"
-      ],
-      "js": [
-        "src/inject.js"
-      ],
+      "matches": ["https://github.com/*"],
+      "js": ["src/inject.js"],
       "run_at": "document_end"
     }
   ],

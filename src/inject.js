@@ -1,60 +1,62 @@
 /* global fetch, Request, Headers, chrome, localStorage */
 
-const API = 'https://api.github.com/repos/'
-const NAV_ELEM_ID = 'github-repo-size'
-const GITHUB_TOKEN_KEY = 'x-github-token'
+const API = "https://api.github.com/repos/";
+const NAV_ELEM_ID = "github-repo-size";
+const GITHUB_TOKEN_KEY = "x-github-token";
 
-const storage = chrome.storage.sync || chrome.storage.local
+const storage = chrome.storage.sync || chrome.storage.local;
 
-let githubToken
+let githubToken;
 
 const getRepoObject = () => {
-  const repoUri = document.location.pathname
-  const arr = repoUri.replace(/^\//, '').split('/')
+  const repoUri = document.location.pathname;
+  const arr = repoUri.replace(/^\//, "").split("/");
 
-  const userOrg = arr.shift()
-  const repoName = arr.shift()
-  const repo = `${userOrg}/${repoName}`
+  const userOrg = arr.shift();
+  const repoName = arr.shift();
+  const repo = `${userOrg}/${repoName}`;
 
-  const ref = document.querySelector('#branch-picker-repos-header-ref-selector').textContent.trim()
+  const ref = document
+    .querySelector("#branch-picker-repos-header-ref-selector")
+    .textContent.trim();
 
-  const currentPath = repoUri.split(ref)[1]?.trim() ?? '';
+  const currentPath = repoUri.split(ref)[1]?.trim() ?? "";
 
   return {
     repo,
     ref,
-    currentPath
-  }
-}
+    currentPath,
+  };
+};
 
 const getHumanReadableSizeObject = (bytes) => {
   if (bytes === 0) {
     return {
       size: 0,
-      measure: 'Bytes'
-    }
+      measure: "Bytes",
+    };
   }
 
-  const K = 1024
-  const MEASURE = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-  const i = Math.floor(Math.log(bytes) / Math.log(K))
+  const K = 1024;
+  const MEASURE = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(K));
 
   return {
     size: parseFloat((bytes / Math.pow(K, i)).toFixed(2)),
-    measure: MEASURE[i]
-  }
-}
+    measure: MEASURE[i],
+  };
+};
 
 const getHumanReadableSize = (size) => {
-  if (!size) return ''
+  if (!size) return "";
 
-  const t = getHumanReadableSizeObject(size)
+  const t = getHumanReadableSizeObject(size);
 
-  return t.size + ' ' + t.measure
-}
+  return t.size + " " + t.measure;
+};
 
 const getSizeHTML = (size) => {
-  const humanReadableSize = getHumanReadableSizeObject(size)
+  const humanReadableSize = getHumanReadableSizeObject(size);
 
   return `
 <li class="d-flex" id="${NAV_ELEM_ID}">
@@ -65,192 +67,201 @@ const getSizeHTML = (size) => {
     <span data-content="Settings">${humanReadableSize.size} ${humanReadableSize.measure}</span>
   </a>
 </li>
-`
-}
+`;
+};
 
 const checkStatus = (response) => {
   if (response.status >= 200 && response.status < 300) {
-    return response
+    return response;
   }
 
-  console.error(response)
+  console.error(response);
 
-  throw Error(`GitHub returned an invalid status: ${response.status}`)
-}
+  throw Error(`GitHub returned an invalid status: ${response.status}`);
+};
 
 const getAPIData = (uri) => {
   const headerObj = {
-    'User-Agent': 'harshjv/github-repo-size'
-  }
+    "User-Agent": "harshjv/github-repo-size",
+  };
 
-  const token = localStorage.getItem(GITHUB_TOKEN_KEY) || githubToken
+  const token = localStorage.getItem(GITHUB_TOKEN_KEY) || githubToken;
 
   if (token) {
-    headerObj.Authorization = 'token ' + token
+    headerObj.Authorization = "token " + token;
   }
 
   const request = new Request(`${API}${uri}`, {
-    headers: new Headers(headerObj)
-  })
+    headers: new Headers(headerObj),
+  });
 
   return fetch(request)
     .then(checkStatus)
-    .then(response => response.json())
-}
+    .then((response) => response.json());
+};
 
-const getFileName = text => text.trim().split('/')[0]
+const getFileName = (text) => text.trim().split("/")[0];
 
 const checkForRepoPage = async () => {
-  const repoObj = getRepoObject()
-  if (!repoObj) return
+  const repoObj = getRepoObject();
+  if (!repoObj) return;
 
   // wait for the table to load
   await new Promise((resolve, reject) => {
-    function loading () {
-      return !!document.querySelector('.Skeleton')
+    function loading() {
+      return !!document.querySelector(".Skeleton");
     }
 
-    if (!loading()) return resolve()
+    if (!loading()) return resolve();
 
     const interval = setInterval(() => {
       if (!loading()) {
-        clearInterval(interval)
-        resolve()
+        clearInterval(interval);
+        resolve();
       }
-    }, 100)
-  })
+    }, 100);
+  });
 
-  const ns = document.querySelector('ul.UnderlineNav-body')
-  const navElem = document.getElementById(NAV_ELEM_ID)
-  const tdElems = document.querySelector('span.github-repo-size-div')
+  const ns = document.querySelector("ul.UnderlineNav-body");
+  const navElem = document.getElementById(NAV_ELEM_ID);
+  const tdElems = document.querySelector("span.github-repo-size-div");
 
   if (ns && !navElem) {
-    getAPIData(repoObj.repo).then(summary => {
+    getAPIData(repoObj.repo).then((summary) => {
       if (summary && summary.size) {
-        ns.insertAdjacentHTML('beforeend', getSizeHTML(summary.size * 1024))
-        const newLiElem = document.getElementById(NAV_ELEM_ID)
-        newLiElem.title = 'Click to load directory sizes'
-        newLiElem.style.cssText = 'cursor: pointer'
-        newLiElem.onclick = loadDirSizes
+        ns.insertAdjacentHTML("beforeend", getSizeHTML(summary.size * 1024));
+        const newLiElem = document.getElementById(NAV_ELEM_ID);
+        newLiElem.title = "Click to load directory sizes";
+        newLiElem.style.cssText = "cursor: pointer";
+        newLiElem.onclick = loadDirSizes;
       }
-    })
+    });
   }
 
-  if (tdElems) return
+  if (tdElems) return;
 
-  const tree = await getAPIData(`${repoObj.repo}/contents/${repoObj.currentPath}?ref=${repoObj.ref}`)
-  const sizeObj = { '..': '..' }
+  const tree = await getAPIData(
+    `${repoObj.repo}/contents/${repoObj.currentPath}?ref=${repoObj.ref}`
+  );
+  const sizeObj = { "..": ".." };
 
-  tree.forEach(item => {
-    sizeObj[item.name] = item.type !== 'dir' ? item.size : 'dir'
-  })
+  tree.forEach((item) => {
+    sizeObj[item.name] = item.type !== "dir" ? item.size : "dir";
+  });
 
-  const rows = [...document.querySelectorAll('tr.react-directory-row')]
+  const rows = [...document.querySelectorAll("tr.react-directory-row")];
 
   rows.forEach((row) => {
-    const fileNameEl = row.querySelector('h3')
-    const filename = getFileName(fileNameEl.textContent)
-    const t = sizeObj[filename]
+    const fileNameEl = row.querySelector("h3");
+    const filename = getFileName(fileNameEl.textContent);
+    const t = sizeObj[filename];
 
-    const div = document.createElement('div')
-    div.setAttribute('role', 'gridcell')
+    const div = document.createElement("div");
+    div.setAttribute("role", "gridcell");
+    div.setAttribute("data-testid", `${filename}-github-repo-size-cell`);
 
-    div.style.cssText = 'width: 80px'
-    div.className = 'text-gray-light text-right mr-3'
+    div.style.cssText = "width: 80px";
+    div.className = "text-gray-light text-right mr-3";
 
-    let label
+    let label;
 
-    if (t === 'dir') {
-      label = '&middot;&middot;&middot;'
-      div.className += ' github-repo-size-dir'
-      div.title = 'Click to load directory size'
-      div.style.cssText = 'cursor: pointer; width: 80px'
-      div.onclick = loadDirSizes
-      div.setAttribute('data-dirname', filename)
-    } else if (t === '..') {
-      label = ''
+    if (t === "dir") {
+      label = "&middot;&middot;&middot;";
+      div.className += " github-repo-size-dir";
+      div.title = "Click to load directory size";
+      div.style.cssText = "cursor: pointer; width: 80px";
+      div.onclick = loadDirSizes;
+      div.setAttribute("data-dirname", filename);
+    } else if (t === "..") {
+      label = "";
     } else {
-      label = getHumanReadableSize(t)
+      label = getHumanReadableSize(t);
     }
 
-    div.innerHTML = `<span class="css-truncate css-truncate-target d-block width-fit github-repo-size-div">${label}</span>`
+    div.innerHTML = `<span class="css-truncate css-truncate-target d-block width-fit github-repo-size-div">${label}</span>`;
 
-    const td = document.createElement('td')
-    td.appendChild(div)
+    const td = document.createElement("td");
+    td.appendChild(div);
 
-    reference = row.querySelector('td:last-child')
-    row.insertBefore(td, reference)
-  })
+    reference = row.querySelector("td:last-child");
+    row.insertBefore(td, reference);
+  });
 
-  const rowHeader = document.querySelector('table > tbody > tr > td:nth-child(1)')
-  rowHeader.setAttribute('colspan', '4')
-}
+  const rowHeader = document.querySelector(
+    "table > tbody > tr > td:nth-child(1)"
+  );
+  rowHeader.setAttribute("colspan", "4");
+};
 
 const loadDirSizes = async () => {
-  const files = [...document.querySelectorAll('.github-repo-size-dir')]
-  const navElem = document.getElementById(NAV_ELEM_ID)
+  const files = [...document.querySelectorAll(".github-repo-size-dir")];
+  const navElem = document.getElementById(NAV_ELEM_ID);
 
   if (navElem) {
-    navElem.onclick = null
-    navElem.title = 'Loading directory sizes...'
+    navElem.onclick = null;
+    navElem.title = "Loading directory sizes...";
   }
 
   files.forEach((file) => {
-    file.onClick = null
-  })
+    file.onClick = null;
+  });
 
-  const repoObj = getRepoObject()
-  if (!repoObj) return
+  const repoObj = getRepoObject();
+  if (!repoObj) return;
 
-  const data = await getAPIData(`${repoObj.repo}/git/trees/${repoObj.ref}?recursive=1`)
+  const data = await getAPIData(
+    `${repoObj.repo}/git/trees/${repoObj.ref}?recursive=1`
+  );
 
   if (data.truncated) {
-    console.warn('github-repo-size: Data truncated. Directory size info may be incomplete.')
+    console.warn(
+      "github-repo-size: Data truncated. Directory size info may be incomplete."
+    );
   }
 
-  const sizeObj = {}
+  const sizeObj = {};
 
-  data.tree.forEach(item => {
-    if (!item.path.startsWith(repoObj.currentPath)) return
+  data.tree.forEach((item) => {
+    if (!item.path.startsWith(repoObj.currentPath)) return;
 
     const arr = item.path
-      .replace(new RegExp(`^${repoObj.currentPath}`), '')
-      .replace(/^\//, '')
-      .split('/')
+      .replace(new RegExp(`^${repoObj.currentPath}`), "")
+      .replace(/^\//, "")
+      .split("/");
 
-    if (arr.length >= 2 && item.type === 'blob') {
-      const dir = arr[0]
-      if (sizeObj[dir] === undefined) sizeObj[dir] = 0
-      sizeObj[dir] += item.size
+    if (arr.length >= 2 && item.type === "blob") {
+      const dir = arr[0];
+      if (sizeObj[dir] === undefined) sizeObj[dir] = 0;
+      sizeObj[dir] += item.size;
     }
-  })
+  });
 
-  files.forEach(file => {
-    const dirname = file.getAttribute('data-dirname')
-    const t = sizeObj[dirname]
+  files.forEach((file) => {
+    const dirname = file.getAttribute("data-dirname");
+    const t = sizeObj[dirname];
 
-    const dir = file.querySelector('span')
+    const dir = file.querySelector("span");
 
     if (dir) {
-      dir.textContent = getHumanReadableSize(t)
+      dir.textContent = getHumanReadableSize(t);
     }
-  })
+  });
 
   if (navElem) {
-    navElem.title = 'Directory sizes loaded successfully'
+    navElem.title = "Directory sizes loaded successfully";
   }
-}
+};
 
 storage.get(GITHUB_TOKEN_KEY, function (data) {
-  githubToken = data[GITHUB_TOKEN_KEY]
+  githubToken = data[GITHUB_TOKEN_KEY];
 
   chrome.storage.onChanged.addListener((changes, namespace) => {
     if (changes[GITHUB_TOKEN_KEY]) {
-      githubToken = changes[GITHUB_TOKEN_KEY].newValue
+      githubToken = changes[GITHUB_TOKEN_KEY].newValue;
     }
-  })
+  });
 
-  document.addEventListener('pjax:end', checkForRepoPage, false)
+  document.addEventListener("pjax:end", checkForRepoPage, false);
 
-  checkForRepoPage()
-})
+  checkForRepoPage();
+});
