@@ -65,8 +65,8 @@ and then remove it to use previously set token;
 
 ### Tests
 
-1. repoSizeExtensionDisabled.spec - tests the when the extension is disabled
-2. repoSizeExtensionEnabled.spec - tests when the extension is enabled
+1. `repoSizeExtensionDisabled.spec` - tests the when the extension is disabled
+2. `repoSizeExtensionEnabled.spec` - tests when the extension is enabled
 
 - Note that the `test.describe("Extension Enabled: File Size Validation"` test suite will fail unless you know the exact file names and corresponding sizes and you have put that in the testDataFile. I have provided a sample of what that looks like in the `options.ts` file
 
